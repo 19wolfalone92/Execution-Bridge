@@ -65,9 +65,10 @@ class MainActivity : Activity() {
         status=label("Не подключено")
         capture=button("Сформировать снимок") {
             if(!busy && !disabled.get()) {
-                snapshot=health()
+                val fresh=health()
+                snapshot=fresh
                 capturedAt=android.os.SystemClock.elapsedRealtime()
-                preview.text=snapshot.toString(2)
+                preview.text=fresh.toString(2)
                 send.isEnabled=true
             }
         }
@@ -75,6 +76,7 @@ class MainActivity : Activity() {
         send.isEnabled=false
         button("Отключить доступ") { stopAccess() }
         setContentView(scroll)
+        applySystemInsets(scroll)
     }
 
     private fun health(): JSONObject {

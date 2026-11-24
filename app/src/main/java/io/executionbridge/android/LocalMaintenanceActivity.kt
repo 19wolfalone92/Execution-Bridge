@@ -65,7 +65,9 @@ class LocalMaintenanceActivity : Activity() {
         }
         export.isEnabled=false
         result=label("Сформируйте отчёт.")
-        setContentView(ScrollView(this).apply {addView(col)})
+        val scroll=ScrollView(this).apply {addView(col)}
+        setContentView(scroll)
+        applySystemInsets(scroll)
         showReport()
     }
 
@@ -211,7 +213,9 @@ class LocalMaintenanceActivity : Activity() {
             var temp:File?=null
             val outcome=runCatching {
                 if(request==13) {
-                    requireNotNull(contentResolver.openOutputStream(uri,"wt")).use {it.write(requireNotNull(exportText).toByteArray(Charsets.UTF_8))}
+                    val bytes=requireNotNull(exportText).toByteArray(Charsets.UTF_8)
+                    check(!Thread.currentThread().isInterrupted)
+                    requireNotNull(contentResolver.openOutputStream(uri,"wt")).use {it.write(bytes)}
                     null
                 } else {
                     val f=File.createTempFile("owner-picked-",if(request==12) ".apk" else ".zip",cacheDir);temp=f
