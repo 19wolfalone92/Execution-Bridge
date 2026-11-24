@@ -103,7 +103,17 @@ class MainActivity : Activity() {
             c.setRequestProperty("Content-Type","application/json")
             c.outputStream.use { it.write(data.toString().toByteArray(Charsets.UTF_8)) }
             check(c.responseCode==200)
-            val bytes=c.inputStream.use { it.readNBytes(16385) }
+            val bytes=c.inputStream.use { input ->
+                val output=java.io.ByteArrayOutputStream()
+                val buffer=ByteArray(4096)
+                while(true) {
+                    val n=input.read(buffer)
+                    if(n<0) break
+                    check(output.size()+n<=16384)
+                    output.write(buffer,0,n)
+                }
+                output.toByteArray()
+            }
             check(bytes.size<=16384)
             return JSONObject(String(bytes,Charsets.UTF_8))
         } finally {
