@@ -26,6 +26,7 @@ class LocalMaintenanceActivity : Activity() {
     private lateinit var result: TextView
     private lateinit var expected: EditText
     private lateinit var export: Button
+    private lateinit var share: Button
     private var report: JSONObject?=null
     private var frozenExport: String?=null
     private var frozenHash: String?=null
@@ -63,6 +64,14 @@ class LocalMaintenanceActivity : Activity() {
                 putExtra(Intent.EXTRA_TITLE,"ExecutionBridge-report.json")
             },13)
         }
+        share=button("Поделиться отчётом (выбрать ChatGPT)") {
+            val data=report?.toString(2) ?: return@button
+            val intent=Intent(Intent.ACTION_SEND).apply {
+                type="text/plain";putExtra(Intent.EXTRA_TEXT,data)
+            }
+            try {startActivity(Intent.createChooser(intent,"Выберите получателя отчёта"))}
+            catch (_:android.content.ActivityNotFoundException) {toast("Нет доступного приложения. Сохраните JSON.")}
+        }
         export.isEnabled=false
         result=label("Сформируйте отчёт.")
         val scroll=ScrollView(this).apply {addView(col)}
@@ -97,6 +106,7 @@ class LocalMaintenanceActivity : Activity() {
     private fun updateControls() {
         controls.forEach {it.isEnabled=!busy && pending==0}
         export.isEnabled=!busy && pending==0 && report!=null
+        share.isEnabled=!busy && pending==0 && report!=null
         expected.isEnabled=!busy && pending==0
     }
     private fun showReport() {result.text=report?.toString(2) ?: "Сформируйте отчёт.";updateControls()}

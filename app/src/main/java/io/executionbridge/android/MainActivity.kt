@@ -34,6 +34,7 @@ class MainActivity : Activity() {
     private var capturedAt=0L
     private var busy=false
     private lateinit var capture: Button
+    private lateinit var checkGateway: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +73,7 @@ class MainActivity : Activity() {
                 send.isEnabled=true
             }
         }
+        checkGateway=button("Проверить связь с Gateway (без отправки снимка)") { verifyGateway() }
         send=button("Отправить показанный снимок один раз") { submit() }
         send.isEnabled=false
         button("Отключить доступ") { stopAccess() }
@@ -133,6 +135,38 @@ class MainActivity : Activity() {
             synchronized(lock) { if(active===c) active=null }
         }
     }
+    private fun verifyGateway() {
+        if(busy || disabled.get()) return
+        val base: URI
+        val did: String
+        val token=credential.text.toString()
+        try {
+            base=Endpoint.base(endpoint.text.toString())
+            did=Endpoint.id(device.text.toString())
+            require(token.length in 32..128 && token.all { it.isLetterOrDigit() || it=='_' || it=='-' })
+        } catch (_:Exception) {
+            status.text="Проверьте HTTPS-адрес, ID и токен."
+            return
+        }
+        credential.text.clear()
+        busy=true;capture.isEnabled=false;send.isEnabled=false;checkGateway.isEnabled=false
+        status.text="Проверка HTTPS и авторизации…"
+        pool.execute {
+            val message=try {
+                val response=post(base,token,"/v1/poll",JSONObject().put("device_id",did))
+                val oid=GatewayPoll.pendingId(response)
+                if(oid==null) "Gateway доступен, авторизация подтверждена. Нет ожидающих запросов. Снимок не отправлен."
+                else "Gateway доступен, авторизация подтверждена. Ожидает запрос: $oid. Снимок не отправлен."
+            } catch (_:Exception) { "Gateway: связь или авторизация не подтверждена." }
+            runOnUiThread {
+                if(!disabled.get() && !isFinishing && !isDestroyed) {
+                    busy=false;capture.isEnabled=true;checkGateway.isEnabled=true
+                    send.isEnabled=snapshot!=null && android.os.SystemClock.elapsedRealtime()-capturedAt<=60000
+                    status.text=message
+                }
+            }
+        }
+    }
     private fun submit() {
         if(busy || disabled.get()) return
         val shown=snapshot ?: return
@@ -152,24 +186,21 @@ class MainActivity : Activity() {
         }
         credential.text.clear()
         snapshot=null
-        busy=true;capture.isEnabled=false
+        busy=true;capture.isEnabled=false;checkGateway.isEnabled=false
         send.isEnabled=false
         status.text="Запрос ожидающих операций…"
         pool.execute {
             val message=try {
                 val poll=post(base,token,"/v1/poll",JSONObject().put("device_id",did))
-                if(poll.isNull("operation")) "Нет ожидающих запросов."
+                val oid=GatewayPoll.pendingId(poll)
+                if(oid==null) "Gateway доступен, авторизация подтверждена. Нет ожидающих запросов."
                 else {
-                    val op=poll.getJSONObject("operation")
-                    check(op.getString("type")=="bridge.get_device_health")
-                    check(op.getString("status")=="PENDING")
-                    val oid=Endpoint.id(op.getString("operation_id"))
                     val response=post(base,token,"/v1/finish",JSONObject().put("device_id",did).put("operation_id",oid).put("health",shown))
                     check(response.getString("operation_id")==oid && response.getString("status")=="SUCCEEDED")
                     "Сервер подтвердил снимок: $oid"
                 }
             } catch (_:Exception) { "Операция не подтверждена. Проверьте состояние на сервере." }
-            runOnUiThread { if(!disabled.get() && !isFinishing && !isDestroyed) {busy=false;capture.isEnabled=true;status.text=message} }
+            runOnUiThread { if(!disabled.get() && !isFinishing && !isDestroyed) {busy=false;capture.isEnabled=true;checkGateway.isEnabled=true;status.text=message} }
         }
     }
     private fun stopAccess() {
@@ -180,6 +211,7 @@ class MainActivity : Activity() {
         preview.text="Снимок очищен"
         send.isEnabled=false
         capture.isEnabled=false
+        checkGateway.isEnabled=false
         status.text="Доступ отключён локально. Для отзыва токена используйте Gateway."
     }
     override fun onDestroy() {

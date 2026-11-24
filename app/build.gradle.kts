@@ -9,8 +9,8 @@ android {
         applicationId = "io.executionbridge.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.2.1-dev"
+        versionCode = 4
+        versionName = "0.2.2-dev"
     }
     buildFeatures { buildConfig = true }
     compileOptions {
