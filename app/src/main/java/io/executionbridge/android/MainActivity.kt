@@ -59,6 +59,9 @@ class MainActivity : Activity() {
         button("Проверка связи с ChatGPT (код EB1)") {
             startActivity(Intent(this, ChallengeActivity::class.java))
         }
+        button("Подписанная диагностика EB2") {
+            startActivity(Intent(this, SignedDiagnosticsActivity::class.java))
+        }
         label("Gateway (необязательный экспериментальный режим)")
         endpoint=input("https://gateway.example")
         device=input("ID устройства")
