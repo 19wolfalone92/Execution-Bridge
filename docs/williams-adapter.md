@@ -1,0 +1,6 @@
+# Williams read-only adapter
+Source inspection: Williams main, app/build.gradle.kts, AndroidManifest.xml, DiagnosticsArchive.kt. The existing archive uses WILLIAMS_ARCHIVE_META_V1, report_at_ms, mandatory entries and observer record count verification; DiagnosticsArchive.kt stores the latest ZIP in app-private filesDir. Release package com.williamsbot, debug com.williamsbot.debug. The current manifest has no exported diagnostic provider; Bridge cannot read these private files directly. No modifications to Williams.
+ 
+Use on an owner-exported file: python -m adapters.williams_archive /private/path/to/export.zip. It validates bounded ZIP structure, stream CRCs, hash, metadata and history completeness; it returns only bounded summary metadata, not diagnostic contents. It does not authenticate the origin or prove the accuracy of the report, exchange status, or app version; readiness remains BLOCKED. Raw archives may contain sensitive financial details; do not commit or upload them publicly.
+ 
+Future cooperative connection: use owner-approved export or an explicit authenticated app SDK with narrow caller checks and revocation. Use fresh position/STOP/reconciliation evidence and safe-stop handshake for updates. No remote trading commands.

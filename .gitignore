@@ -1,0 +1,15 @@
+*.db
+*.db-*
+*.sqlite*
+*.apk
+*.jks
+*.keystore
+*.pem
+*.key
+.env*
+local.properties
+.gradle/
+**/build/
+__pycache__/
+*.pyc
+.idea/
