@@ -47,7 +47,7 @@ class MainActivity : Activity() {
         fun button(s: String, f: () -> Unit) = Button(this).apply {
             text=s; setOnClickListener { f() }; column.addView(this)
         }
-        label("Execution Bridge • 0.1.0-dev")
+        label("Execution Bridge • 0.2.0-dev")
         label("Только чтение. Данные отправляются только по вашему нажатию. Нет фонового управления.")
         endpoint=input("https://gateway.example")
         device=input("ID устройства")
@@ -64,6 +64,9 @@ class MainActivity : Activity() {
         send=button("Отправить показанный снимок один раз") { submit() }
         send.isEnabled=false
         button("Отключить доступ") { stopAccess() }
+        button("Локальный пакет обслуживания") {
+            startActivity(Intent(this, LocalMaintenanceActivity::class.java))
+        }
         setContentView(scroll)
     }
 
@@ -78,7 +81,7 @@ class MainActivity : Activity() {
         val connected=cm.getNetworkCapabilities(cm.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)==true
         return JSONObject().put("model",Build.MODEL.take(80))
             .put("android",Build.VERSION.RELEASE.take(80))
-            .put("bridge","0.1.0-dev")
+            .put("bridge","0.2.0-dev")
             .put("battery",if(level>=0 && scale>0) (level*100/scale).coerceIn(0,100) else JSONObject.NULL)
             .put("temperature_tenths_c",if(temperature in -500..1500) temperature else JSONObject.NULL)
             .put("available_ram_bytes",memory.availMem)

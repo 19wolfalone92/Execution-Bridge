@@ -1,5 +1,5 @@
-# Execution Bridge — 0.1.0-dev
-First read-only vertical slice. Android user opens the app, previews a limited device-health snapshot, enters a trusted HTTPS gateway address and temporary device credential, and presses Send once. Gateway operator queues a device-health request, then fetches the actual result by operation ID. No background collection, shell, screen capture, arbitrary app access, trade control or APK installation. No production deployment. Never paste credentials into chat.
+# Execution Bridge — 0.2.0-dev
+Owner-initiated read-only maintenance. See [local maintenance](docs/local-maintenance.md) for offline phone and Williams inspection, APK preflight and manual JSON export. Existing gateway remains experimental. Android user opens the app, previews a limited device-health snapshot, enters a trusted HTTPS gateway address and temporary device credential, and presses Send once. Gateway operator queues a device-health request, then fetches the actual result by operation ID. No background collection, shell, screen capture, arbitrary app access, trade control or APK installation. No production deployment. Never paste credentials into chat.
 
 ## Local gateway
 Python 3.11+, standard library only. Set up a private working directory (outside Git), run:
