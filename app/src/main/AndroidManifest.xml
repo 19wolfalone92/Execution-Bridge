@@ -5,7 +5,8 @@
         <package android:name="com.williamsbot" />
         <package android:name="com.williamsbot.debug" />
     </queries>
-    <application android:label="Execution Bridge" android:allowBackup="false" android:usesCleartextTraffic="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <application android:label="${bridgeLabel}" android:allowBackup="false" android:usesCleartextTraffic="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".ChallengeActivity" android:exported="false" />
         <activity android:name=".LocalMaintenanceActivity" android:exported="false" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>

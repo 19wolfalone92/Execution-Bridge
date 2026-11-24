@@ -7,10 +7,14 @@ android {
     compileSdk = 35
     defaultConfig {
         applicationId = "io.executionbridge.android"
+        if (providers.gradleProperty("bridgeSideBySide").orNull == "true") {
+            applicationId = "io.executionbridge.android.challenge"
+        }
+        manifestPlaceholders["bridgeLabel"] = if (providers.gradleProperty("bridgeSideBySide").orNull == "true") "Execution Bridge Test" else "Execution Bridge"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.2.2-dev"
+        versionCode = 5
+        versionName = "0.2.3-dev"
     }
     buildFeatures { buildConfig = true }
     compileOptions {

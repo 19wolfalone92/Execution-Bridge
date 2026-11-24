@@ -56,6 +56,9 @@ class MainActivity : Activity() {
         button("Локальный пакет обслуживания") {
             startActivity(Intent(this, LocalMaintenanceActivity::class.java))
         }
+        button("Проверка связи с ChatGPT (код EB1)") {
+            startActivity(Intent(this, ChallengeActivity::class.java))
+        }
         label("Gateway (необязательный экспериментальный режим)")
         endpoint=input("https://gateway.example")
         device=input("ID устройства")
