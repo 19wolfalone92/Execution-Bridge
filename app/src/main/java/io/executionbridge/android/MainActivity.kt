@@ -31,6 +31,9 @@ class MainActivity : Activity() {
     private lateinit var credential: EditText
     private lateinit var send: Button
     private var snapshot: JSONObject? = null
+    private var capturedAt=0L
+    private var busy=false
+    private lateinit var capture: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +50,12 @@ class MainActivity : Activity() {
         fun button(s: String, f: () -> Unit) = Button(this).apply {
             text=s; setOnClickListener { f() }; column.addView(this)
         }
-        label("Execution Bridge • 0.2.0-dev")
+        label("Execution Bridge • "+BuildConfig.VERSION_NAME)
         label("Только чтение. Данные отправляются только по вашему нажатию. Нет фонового управления.")
+        button("Локальный пакет обслуживания") {
+            startActivity(Intent(this, LocalMaintenanceActivity::class.java))
+        }
+        label("Gateway (необязательный экспериментальный режим)")
         endpoint=input("https://gateway.example")
         device=input("ID устройства")
         credential=input("Временный токен устройства").apply {
@@ -56,17 +63,17 @@ class MainActivity : Activity() {
         }
         preview=label("Сначала сформируйте снимок.")
         status=label("Не подключено")
-        button("Сформировать снимок") {
-            snapshot=health()
-            preview.text=snapshot.toString()
-            if (!disabled.get()) send.isEnabled=true
+        capture=button("Сформировать снимок") {
+            if(!busy && !disabled.get()) {
+                snapshot=health()
+                capturedAt=android.os.SystemClock.elapsedRealtime()
+                preview.text=snapshot.toString(2)
+                send.isEnabled=true
+            }
         }
         send=button("Отправить показанный снимок один раз") { submit() }
         send.isEnabled=false
         button("Отключить доступ") { stopAccess() }
-        button("Локальный пакет обслуживания") {
-            startActivity(Intent(this, LocalMaintenanceActivity::class.java))
-        }
         setContentView(scroll)
     }
 
@@ -81,7 +88,7 @@ class MainActivity : Activity() {
         val connected=cm.getNetworkCapabilities(cm.activeNetwork)?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)==true
         return JSONObject().put("model",Build.MODEL.take(80))
             .put("android",Build.VERSION.RELEASE.take(80))
-            .put("bridge","0.2.0-dev")
+            .put("bridge",BuildConfig.VERSION_NAME)
             .put("battery",if(level>=0 && scale>0) (level*100/scale).coerceIn(0,100) else JSONObject.NULL)
             .put("temperature_tenths_c",if(temperature in -500..1500) temperature else JSONObject.NULL)
             .put("available_ram_bytes",memory.availMem)
@@ -125,7 +132,11 @@ class MainActivity : Activity() {
         }
     }
     private fun submit() {
+        if(busy || disabled.get()) return
         val shown=snapshot ?: return
+        if(android.os.SystemClock.elapsedRealtime()-capturedAt>60000) {
+            snapshot=null;send.isEnabled=false;status.text="Снимок устарел. Сформируйте новый.";return
+        }
         val base: URI
         val did: String
         val token=credential.text.toString()
@@ -139,6 +150,7 @@ class MainActivity : Activity() {
         }
         credential.text.clear()
         snapshot=null
+        busy=true;capture.isEnabled=false
         send.isEnabled=false
         status.text="Запрос ожидающих операций…"
         pool.execute {
@@ -155,7 +167,7 @@ class MainActivity : Activity() {
                     "Сервер подтвердил снимок: $oid"
                 }
             } catch (_:Exception) { "Операция не подтверждена. Проверьте состояние на сервере." }
-            runOnUiThread { if(!disabled.get() && !isFinishing) status.text=message }
+            runOnUiThread { if(!disabled.get() && !isFinishing && !isDestroyed) {busy=false;capture.isEnabled=true;status.text=message} }
         }
     }
     private fun stopAccess() {
@@ -165,6 +177,7 @@ class MainActivity : Activity() {
         snapshot=null
         preview.text="Снимок очищен"
         send.isEnabled=false
+        capture.isEnabled=false
         status.text="Доступ отключён локально. Для отзыва токена используйте Gateway."
     }
     override fun onDestroy() {
