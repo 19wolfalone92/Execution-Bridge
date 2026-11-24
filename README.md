@@ -1,4 +1,4 @@
-# Execution Bridge — 0.2.3-dev
+# Execution Bridge — 0.2.4-dev
 Owner-initiated read-only maintenance. See [local maintenance](docs/local-maintenance.md) for offline phone and Williams inspection, APK preflight and manual JSON export. Existing gateway remains experimental. Android user opens the app, previews a limited device-health snapshot, enters a trusted HTTPS gateway address and temporary device credential, and presses Send once. Gateway operator queues a device-health request, then fetches the actual result by operation ID. No background collection, shell, screen capture, arbitrary app access, trade control or APK installation. No production deployment. Never paste credentials into chat.
 
 ## Local gateway
@@ -23,3 +23,6 @@ Owner can check authenticated gateway connectivity without transmitting a health
 
 ## 0.2.3-dev
 See [manual ChatGPT round-trip](docs/chat-roundtrip.md). CI artifact is a side-by-side test package, not an upgrade. A physical owner-approved response is required before declaring the manual round trip verified.
+
+## 0.2.4-dev
+[Signed diagnostic experiment](docs/signed-diagnostics.md): owner-pinned P-256 key, strict EB2 correlation and durable one-time verification. Manual transport only. Separate test APK; no automatic ChatGPT connection.

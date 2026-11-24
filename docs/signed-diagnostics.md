@@ -1,0 +1,15 @@
+# 0.2.4-dev — signed offline diagnostic experiment
+No new remote transport is available in this environment. Current official OpenAI docs: custom external MCP connections on web for eligible workspaces, Pro read/fetch only, no mobile connection setup; Sites-hosted plugin path is available on personal plans subject to access, but authoring requires Work web or Work/Codex desktop. No Sites deployment tool available in this chat. No hidden transport, external API cost, or public repository telemetry. Existing plugin has only a skill, not MCP endpoints.
+
+The separate test APK package io.executionbridge.android.signedtest is intentionally NOT an upgrade of 0.2.3. No existing app needs uninstalling. EB1 remains. EB2 uses a private EC P-256 signing key generated in Android Keystore. Public key file enrollment is owner-confirmed TOFU, not hardware attestation or authenticated operator pairing. Android explicitly approves every read and never sends automatically. The operator stores pinned public key and issued challenge in a private SQLite database, never in Git.
+
+Procedure (Python 3.11+, OpenSSL on PATH):
+- Open Signed diagnostics EB2, create/show public key, export JSON to the intended owner only.
+- Confirm fingerprint from the owner's app display using an independent trusted channel when available. Use python signed_verify.py --db /private/ledger.db pin key.json --confirm-fingerprint FINGERPRINT.
+- python signed_verify.py --db /private/ledger.db issue FINGERPRINT GET_BATTERY_STATUS --ttl-ms 1800000
+- Paste EB2 code, approve, export signed JSON.
+- python signed_verify.py --db /private/ledger.db verify response.json
+- A verified response requires an existing outstanding request, matching key/id/operation/nonce/timestamps, an unexpired challenge, correct signature, and an atomic one-time consumption. Rejected responses never consume the request. The result is signed by the pinned key; no hardware, APK or live network attestation. No automation.
+- Local revoke deletes the Android key; receiver must separately revoke pinned key with python signed_verify.py --db /private/ledger.db revoke FINGERPRINT. Do not auto-repin a revoked key. Android stores the most recent signed response atomically alongside request consumption; prior responses are not retained. Replay tracking on Android is bounded and only as durable as app data, wall-clock and local OS. Receiver remains authoritative for one-time acceptance. No background service, no trade or app mutation, no operator key or bearer tokens in reports.
+
+Canonical signature: SHA256withECDSA, ASN.1 DER signature base64, ASCII fields separated by LF with no trailing LF, exact order schema, request_id, key_id, operation, issued_at_ms, expires_at_ms, nonce, captured_at_ms, bridge_version, transport, value. Signed scalar value is string with per-operation validation. key_id is SHA256 of DER SubjectPublicKeyInfo. Four supported operations: GET_BATTERY_STATUS (0..100), GET_STORAGE_STATUS (bytes), GET_NETWORK_STATUS (Android validated capability), GET_BRIDGE_VERSION. Not a proof of live server connectivity.
